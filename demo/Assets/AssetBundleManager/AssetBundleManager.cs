@@ -513,6 +513,8 @@ namespace AssetBundles
                 return;
     #endif
 
+            assetBundleName = RemapVariantName(assetBundleName);
+
             //Debug.Log(m_LoadedAssetBundles.Count + " assetbundle(s) in memory before unloading " + assetBundleName);
 
             UnloadAssetBundleInternal(assetBundleName);
