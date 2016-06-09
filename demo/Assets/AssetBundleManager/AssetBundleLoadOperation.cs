@@ -18,6 +18,7 @@ namespace AssetBundles
                 return null;
             }
         }
+
         public bool MoveNext()
         {
             return !IsDone();
@@ -149,6 +150,7 @@ namespace AssetBundles
     {
         WWW m_WWW;
         string m_Url;
+
         public AssetBundleDownloadFromWebOperation(string assetBundleName, WWW www)
             : base(assetBundleName)
         {
@@ -215,8 +217,8 @@ namespace AssetBundles
             return m_Operation == null || m_Operation.isDone;
         }
     }
-
 #endif
+
     public class AssetBundleLoadLevelOperation : AssetBundleLoadOperation
     {
         protected string                m_AssetBundleName;

@@ -67,10 +67,11 @@ namespace AssetBundles
         static string m_BaseDownloadingURL = "";
         static string[] m_ActiveVariants =  {};
         static AssetBundleManifest m_AssetBundleManifest = null;
-    #if UNITY_EDITOR
+
+#if UNITY_EDITOR
         static int m_SimulateAssetBundleInEditor = -1;
         const string kSimulateAssetBundles = "SimulateAssetBundles";
-    #endif
+#endif
 
         static Dictionary<string, LoadedAssetBundle> m_LoadedAssetBundles = new Dictionary<string, LoadedAssetBundle>();
         static Dictionary<string, string> m_DownloadingErrors = new Dictionary<string, string>();
@@ -124,11 +125,13 @@ namespace AssetBundles
         {
             if (logType == LogType.Error)
                 Debug.LogError("[AssetBundleManager] " + text);
+            else if (m_LogMode == LogMode.All && logType == LogType.Warning)
+                Debug.LogWarning("[AssetBundleManager] " + text);
             else if (m_LogMode == LogMode.All)
                 Debug.Log("[AssetBundleManager] " + text);
         }
 
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
         /// <summary>
         /// Flag to indicate if we want to simulate assetBundles in Editor without building them actually.
         /// </summary>
@@ -151,7 +154,7 @@ namespace AssetBundles
                 }
             }
         }
-        #endif
+#endif
 
         private static string GetStreamingAssetsPath()
         {
@@ -165,7 +168,6 @@ namespace AssetBundles
                 return "file://" +  Application.streamingAssetsPath;
         }
 
-      
         /// <summary>
         /// Sets base downloading URL to a directory relative to the streaming assets directory.
         /// Asset bundles are loaded from a local directory.
@@ -198,18 +200,17 @@ namespace AssetBundles
         /// </summary>
         public static void SetDevelopmentAssetBundleServer()
         {
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             // If we're in Editor simulation mode, we don't have to setup a download URL
             if (SimulateAssetBundleInEditor)
                 return;
-            #endif
+#endif
 
             TextAsset urlFile = Resources.Load("AssetBundleServerURL") as TextAsset;
             string url = (urlFile != null) ? urlFile.text.Trim() : null;
             if (url == null || url.Length == 0)
             {
-                Debug.LogError("Development Server URL could not be found.");
-                //AssetBundleManager.SetSourceAssetBundleURL("http://localhost:7888/" + UnityHelper.GetPlatformName() + "/");
+                Log(LogType.Error, "Development Server URL could not be found.");
             }
             else
             {
@@ -261,7 +262,6 @@ namespace AssetBundles
             return m_LoadedAssetBundles.ContainsKey(assetBundleName);
         }
 
-
         /// <summary>
         /// Initializes asset bundle namager and starts download of manifest asset bundle.
         /// Returns the manifest asset bundle downolad operation object.
@@ -277,18 +277,18 @@ namespace AssetBundles
         /// </summary>
         static public AssetBundleLoadManifestOperation Initialize(string manifestAssetBundleName)
         {
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
             Log(LogType.Info, "Simulation Mode: " + (SimulateAssetBundleInEditor ? "Enabled" : "Disabled"));
-    #endif
+#endif
 
             var go = new GameObject("AssetBundleManager", typeof(AssetBundleManager));
             DontDestroyOnLoad(go);
 
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
             // If we're in Editor simulation mode, we don't need the manifest assetBundle.
             if (SimulateAssetBundleInEditor)
                 return null;
-    #endif
+#endif
 
             LoadAssetBundle(manifestAssetBundleName, true);
             var operation = new AssetBundleLoadManifestOperation(manifestAssetBundleName, "AssetBundleManifest", typeof(AssetBundleManifest));
@@ -308,17 +308,17 @@ namespace AssetBundles
         {
             Log(LogType.Info, "Loading Asset Bundle " + (isLoadingAssetBundleManifest ? "Manifest: " : ": ") + assetBundleName);
 
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
             // If we're in Editor simulation mode, we don't have to really load the assetBundle and its dependencies.
             if (SimulateAssetBundleInEditor)
                 return;
-    #endif
+#endif
 
             if (!isLoadingAssetBundleManifest)
             {
                 if (m_AssetBundleManifest == null)
                 {
-                    Debug.LogError("Please initialize AssetBundleManifest by calling AssetBundleManager.Initialize()");
+                    Log(LogType.Error, "Please initialize AssetBundleManifest by calling AssetBundleManager.Initialize()");
                     return;
                 }
             }
@@ -352,7 +352,7 @@ namespace AssetBundles
         //
         // On most platforms, this is done by the AssetBundleManager itself. However, on
         // certain platforms (iOS at the moment) it's possible that an external asset bundle
-        //  variant resolution mechanism is used. In these cases, we use base asset bundle 
+        // variant resolution mechanism is used. In these cases, we use base asset bundle 
         // name (without the variant tag) as the bundle identifier. The platform-specific 
         // code is responsible for correctly loading the bundle.
         static protected bool UsesExternalBundleVariantResolutionMechanism(string baseAssetBundleName)
@@ -404,7 +404,7 @@ namespace AssetBundles
 
             if (bestFit == int.MaxValue - 1)
             {
-                Debug.LogWarning("Ambigious asset bundle variant chosen because there was no matching active variant: " + bundlesWithVariant[bestFitIndex]);
+                Log(LogType.Warning, "Ambigious asset bundle variant chosen because there was no matching active variant: " + bundlesWithVariant[bestFitIndex]);
             }
 
             if (bestFitIndex != -1)
@@ -439,21 +439,21 @@ namespace AssetBundles
 
             if (bundleBaseDownloadingURL.ToLower().StartsWith("odr://"))
             {
-                #if ENABLE_IOS_ON_DEMAND_RESOURCES
+#if ENABLE_IOS_ON_DEMAND_RESOURCES
                 Log(LogType.Info, "Requesting bundle " + assetBundleName + " through ODR");
                 m_InProgressOperations.Add(new AssetBundleDownloadFromODROperation(assetBundleName));
-                #else
+#else
                 new ApplicationException("Can't load bundle " + assetBundleName + " through ODR: this Unity version or build target doesn't support it.");
-                #endif
+#endif
             }
             else if (bundleBaseDownloadingURL.ToLower().StartsWith("res://"))
             {
-        #if ENABLE_IOS_APP_SLICING
+#if ENABLE_IOS_APP_SLICING
                 Log(LogType.Info, "Requesting bundle " + assetBundleName + " through asset catalog");
                 m_InProgressOperations.Add(new AssetBundleOpenFromAssetCatalogOperation(assetBundleName));
-        #else
+#else
                 new ApplicationException("Can't load bundle " + assetBundleName + " through asset catalog: this Unity version or build target doesn't support it.");
-        #endif
+#endif
             }
             else
             {
@@ -484,7 +484,7 @@ namespace AssetBundles
         {
             if (m_AssetBundleManifest == null)
             {
-                Debug.LogError("Please initialize AssetBundleManifest by calling AssetBundleManager.Initialize()");
+                Log(LogType.Error, "Please initialize AssetBundleManifest by calling AssetBundleManager.Initialize()");
                 return;
             }
 
@@ -507,18 +507,14 @@ namespace AssetBundles
         /// </summary>
         static public void UnloadAssetBundle(string assetBundleName)
         {
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
             // If we're in Editor simulation mode, we don't have to load the manifest assetBundle.
             if (SimulateAssetBundleInEditor)
                 return;
-    #endif
-
-            //Debug.Log(m_LoadedAssetBundles.Count + " assetbundle(s) in memory before unloading " + assetBundleName);
+#endif
 
             UnloadAssetBundleInternal(assetBundleName);
             UnloadDependencies(assetBundleName);
-
-            //Debug.Log(m_LoadedAssetBundles.Count + " assetbundle(s) in memory after unloading " + assetBundleName);
         }
 
         static protected void UnloadDependencies(string assetBundleName)
@@ -596,13 +592,13 @@ namespace AssetBundles
             Log(LogType.Info, "Loading " + assetName + " from " + assetBundleName + " bundle");
 
             AssetBundleLoadAssetOperation operation = null;
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
             if (SimulateAssetBundleInEditor)
             {
                 string[] assetPaths = AssetDatabase.GetAssetPathsFromAssetBundleAndAssetName(assetBundleName, assetName);
                 if (assetPaths.Length == 0)
                 {
-                    Debug.LogError("There is no asset with name \"" + assetName + "\" in " + assetBundleName);
+                    Log(LogType.Error, "There is no asset with name \"" + assetName + "\" in " + assetBundleName);
                     return null;
                 }
 
@@ -611,7 +607,7 @@ namespace AssetBundles
                 operation = new AssetBundleLoadAssetOperationSimulation(target);
             }
             else
-    #endif
+#endif
             {
                 assetBundleName = RemapVariantName(assetBundleName);
                 LoadAssetBundle(assetBundleName);
@@ -631,13 +627,13 @@ namespace AssetBundles
             Log(LogType.Info, "Loading " + levelName + " from " + assetBundleName + " bundle");
 
             AssetBundleLoadOperation operation = null;
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
             if (SimulateAssetBundleInEditor)
             {
                 operation = new AssetBundleLoadLevelSimulationOperation(assetBundleName, levelName, isAdditive);
             }
             else
-    #endif
+#endif
             {
                 assetBundleName = RemapVariantName(assetBundleName);
                 LoadAssetBundle(assetBundleName);
