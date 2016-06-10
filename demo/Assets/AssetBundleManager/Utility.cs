@@ -11,24 +11,24 @@ namespace AssetBundles
 
         public static string GetPlatformName()
         {
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
             return GetPlatformForAssetBundles(EditorUserBuildSettings.activeBuildTarget);
-    #else
+#else
             return GetPlatformForAssetBundles(Application.platform);
-    #endif
+#endif
         }
 
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
         private static string GetPlatformForAssetBundles(BuildTarget target)
         {
             switch (target)
             {
                 case BuildTarget.Android:
                     return "Android";
-            #if UNITY_TVOS
+#if UNITY_TVOS
                 case BuildTarget.tvOS:
                     return "tvOS";
-            #endif
+#endif
                 case BuildTarget.iOS:
                     return "iOS";
                 case BuildTarget.WebGL:
@@ -48,8 +48,7 @@ namespace AssetBundles
                     return null;
             }
         }
-
-    #endif
+#endif
 
         private static string GetPlatformForAssetBundles(RuntimePlatform platform)
         {
@@ -59,10 +58,10 @@ namespace AssetBundles
                     return "Android";
                 case RuntimePlatform.IPhonePlayer:
                     return "iOS";
-            #if UNITY_TVOS
+#if UNITY_TVOS
                 case RuntimePlatform.tvOS:
                     return "tvOS";
-            #endif
+#endif
                 case RuntimePlatform.WebGLPlayer:
                     return "WebGL";
                 case RuntimePlatform.OSXWebPlayer:
