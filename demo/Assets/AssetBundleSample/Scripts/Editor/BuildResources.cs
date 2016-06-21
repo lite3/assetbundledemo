@@ -1,6 +1,7 @@
+#if UNITY_IOS
 using UnityEngine;
 using UnityEditor;
-using UnityEditor.iOS;
+using UnityEditor.iOS; 
 using System.Collections;
 using System.IO;
 
@@ -49,3 +50,4 @@ public class BuildResources
     }
 }
 #endif
+#endif // UNITY_IOS
