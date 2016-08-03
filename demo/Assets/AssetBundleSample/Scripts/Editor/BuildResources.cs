@@ -1,10 +1,11 @@
+#if ENABLE_IOS_ON_DEMAND_RESOURCES || ENABLE_IOS_APP_SLICING
 using UnityEngine;
 using UnityEditor;
-using UnityEditor.iOS;
+using UnityEditor.iOS; 
 using System.Collections;
 using System.IO;
 
-#if ENABLE_IOS_ON_DEMAND_RESOURCES || ENABLE_IOS_APP_SLICING
+
 public class BuildResources
 {
     [InitializeOnLoadMethod]
